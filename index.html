@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="走进千里江山图：让王希孟的青绿长卷成为可游卷、可呼吸的实时画境。"
+    />
+    <meta name="theme-color" content="#18261f" />
+    <title>走进千里江山图</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%239a422f'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='serif' font-size='38' fill='%23eee3bd'%3E千%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="preload" as="image" href="./assets/qianli-world.jpg" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body data-entry-phase="entering" data-ready="false">
+    <div class="painting-stage" id="painting-stage">
+      <div class="fallback-painting" aria-hidden="true">
+        <img src="./assets/qianli-world.jpg" alt="" />
+      </div>
+      <canvas
+        id="scene"
+        tabindex="0"
+        aria-label="千里江山图实时画境。拖动画面游卷，使用 W A S D 或方向键游卷，滚轮调整远近。"
+      ></canvas>
+      <div class="paint-grain" aria-hidden="true"></div>
+      <div class="edge-shade" aria-hidden="true"></div>
+    </div>
+
+    <header class="topbar" aria-label="作品信息">
+      <a class="brand" href="#scene" aria-label="回到画中">
+        <span class="brand-seal" aria-hidden="true">千</span>
+        <span class="brand-copy">
+          <strong>江山行旅</strong>
+          <small>王希孟 · 北宋 1113</small>
+        </span>
+      </a>
+
+      <div class="scene-state" aria-live="polite">
+        <span class="state-dot" aria-hidden="true"></span>
+        <span id="scene-state-text">研墨</span>
+        <span class="state-divider" aria-hidden="true"></span>
+        <span id="route-readout">卷中 · 入谷</span>
+      </div>
+
+      <div class="top-actions">
+        <button
+          class="reference-trigger"
+          id="reference-trigger"
+          type="button"
+          aria-controls="reference-dialog"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5.5h16v13H4zM8 9h8M8 12h5" />
+          </svg>
+          <span>原画对照</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="scene-copy" aria-labelledby="hero-title">
+      <p class="eyebrow">
+        <span>绢本设色</span>
+        <span class="eyebrow-line" aria-hidden="true"></span>
+          <span>原画可游卷</span>
+      </p>
+      <h1 id="hero-title">走进<span>千里江山图<i aria-hidden="true">。</i></span></h1>
+      <p class="hero-sub">原画没有变成另一处风景。它只是被重新点亮，吹入水汽与风。</p>
+    </main>
+
+    <nav class="landmarks" id="landmarks" aria-label="画中行旅">
+      <span class="landmarks-label">行旅</span>
+      <button type="button" data-spot="valley" class="is-active">
+        <span class="route-index">一</span>
+        <span>入谷</span>
+      </button>
+      <button type="button" data-spot="pines">
+        <span class="route-index">二</span>
+        <span>松风</span>
+      </button>
+      <button type="button" data-spot="village">
+        <span class="route-index">三</span>
+        <span>山居</span>
+      </button>
+      <button type="button" data-spot="far">
+        <span class="route-index">四</span>
+        <span>远岫</span>
+      </button>
+    </nav>
+
+    <button class="route-toggle" id="route-toggle" type="button" aria-expanded="false" aria-controls="landmarks">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="6" cy="6" r="2" />
+        <circle cx="18" cy="8" r="2" />
+        <circle cx="8" cy="18" r="2" />
+        <path d="M8 6h5a5 5 0 0 1 5 5v5M8 8v8" />
+      </svg>
+      <span>行旅</span>
+    </button>
+
+    <aside class="controls" aria-label="游卷方法">
+      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 游卷</span>
+      <span>拖动游卷</span>
+      <span>滚轮远近</span>
+      <span><kbd>R</kbd> 归位</span>
+    </aside>
+
+    <aside class="journey-progress" aria-hidden="true">
+      <span class="progress-index" id="progress-index">01 / 04</span>
+      <span class="progress-track"><i id="progress-fill"></i></span>
+      <span class="progress-label" id="progress-label">入谷</span>
+    </aside>
+
+    <div class="joystick" id="joystick" aria-label="行旅摇杆">
+      <span class="joystick-ring"></span>
+      <span class="joystick-knob" id="joystick-knob"></span>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <section class="entry" id="entry" aria-labelledby="entry-title">
+      <div class="entry-vignette" aria-hidden="true"></div>
+      <div class="entry-sheet">
+        <div class="entry-art" aria-hidden="true">
+          <img src="./assets/qianli-start.jpg" alt="" />
+        </div>
+        <div class="entry-copy">
+          <p>北宋 · 王希孟</p>
+          <h2 id="entry-title">千里江山图</h2>
+          <span>展卷，入画</span>
+        </div>
+      </div>
+      <div class="entry-meta">
+        <span>绢本设色</span>
+        <span class="entry-rule" aria-hidden="true"></span>
+        <span>故宫博物院藏</span>
+      </div>
+      <button class="enter-button" id="enter-button" type="button">入画</button>
+    </section>
+
+    <div class="loading" id="loading" role="status" aria-live="polite">
+      <span class="loading-rule" aria-hidden="true"></span>
+      <span id="loading-text">研墨</span>
+    </div>
+
+    <dialog class="reference-dialog" id="reference-dialog" aria-labelledby="dialog-title">
+      <div class="dialog-head">
+        <div>
+          <p class="micro-label">王希孟 · 北宋 1113</p>
+          <h2 id="dialog-title">千里江山图</h2>
+        </div>
+        <button class="icon-button dialog-close" id="dialog-close" type="button" aria-label="关闭原画对照">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m5 5 14 14M19 5 5 19" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="dialog-tabs" role="tablist" aria-label="长卷段落">
+        <button type="button" role="tab" aria-selected="true" data-reference="start">开卷云山</button>
+        <button type="button" role="tab" aria-selected="false" data-reference="bridge">水岸长桥</button>
+        <button type="button" role="tab" aria-selected="false" data-reference="end">题跋绢色</button>
+      </div>
+
+      <figure class="dialog-figure">
+        <img id="dialog-image" src="./assets/qianli-world.jpg" alt="《千里江山图》开卷题跋与群山" />
+        <figcaption id="dialog-caption">开卷以题跋、朱印与初起的青绿群峰揭幕，绢色仍清晰可见。</figcaption>
+      </figure>
+
+      <div class="dialog-foot">
+        <p>绢本设色，纵 51.3 厘米，横 1191.5 厘米。实时画境取自原画笔触，仅作缓慢游卷、远近与气流处理。</p>
+        <a
+          href="https://commons.wikimedia.org/wiki/File:Wang_Ximeng._A_Thousand_Li_of_Rivers_and_Mountains._(Complete,_51,3x1191,5_cm)._1113._Palace_museum,_Beijing.jpg"
+          target="_blank"
+          rel="noreferrer"
+        >
+          公有领域图像来源
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+        </a>
+      </div>
+    </dialog>
+
+    <noscript>
+      <div class="noscript-note">本作品需要启用 JavaScript 才能进入实时画境。</div>
+    </noscript>
+  </body>
+</html>
