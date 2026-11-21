@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
-      content="走进千里江山图：让王希孟的青绿长卷成为可游卷、可呼吸的实时画境。"
+      content="走进千里江山图：把王希孟的青绿长卷重建为可第一人称行走的实时三维画境。"
     />
     <meta name="theme-color" content="#18261f" />
     <title>走进千里江山图</title>
@@ -14,6 +14,7 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%239a422f'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='serif' font-size='38' fill='%23eee3bd'%3E千%3C/text%3E%3C/svg%3E"
     />
     <link rel="preload" as="image" href="./assets/qianli-world.jpg" />
+    <link rel="preload" as="image" href="./assets/qianli-panorama.jpg" />
     <link rel="stylesheet" href="./styles.css" />
     <script type="module" src="./app.js"></script>
   </head>
@@ -25,8 +26,9 @@
       <canvas
         id="scene"
         tabindex="0"
-        aria-label="千里江山图实时画境。拖动画面游卷，使用 W A S D 或方向键游卷，滚轮调整远近。"
+        aria-label="千里江山图三维画境。拖动画面环顾，使用 W A S D 或方向键行走，滚轮调整视域。"
       ></canvas>
+      <div class="reticle" aria-hidden="true"><i></i><i></i></div>
       <div class="paint-grain" aria-hidden="true"></div>
       <div class="edge-shade" aria-hidden="true"></div>
     </div>
@@ -67,10 +69,10 @@
       <p class="eyebrow">
         <span>绢本设色</span>
         <span class="eyebrow-line" aria-hidden="true"></span>
-          <span>原画可游卷</span>
+          <span>画中可行走</span>
       </p>
       <h1 id="hero-title">走进<span>千里江山图<i aria-hidden="true">。</i></span></h1>
-      <p class="hero-sub">原画没有变成另一处风景。它只是被重新点亮，吹入水汽与风。</p>
+      <p class="hero-sub">山势从绢面里立起，长桥跨过真实河谷。沿松林走入画卷深处。</p>
     </main>
 
     <nav class="landmarks" id="landmarks" aria-label="画中行旅">
@@ -103,10 +105,11 @@
       <span>行旅</span>
     </button>
 
-    <aside class="controls" aria-label="游卷方法">
-      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 游卷</span>
-      <span>拖动游卷</span>
-      <span>滚轮远近</span>
+    <aside class="controls" aria-label="行走方法">
+      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动</span>
+      <span><kbd>Shift</kbd> 疾行</span>
+      <span>拖动环顾</span>
+      <span>滚轮视域</span>
       <span><kbd>R</kbd> 归位</span>
     </aside>
 
@@ -124,23 +127,27 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <section class="entry" id="entry" aria-labelledby="entry-title">
-      <div class="entry-vignette" aria-hidden="true"></div>
-      <div class="entry-sheet">
-        <div class="entry-art" aria-hidden="true">
-          <img src="./assets/qianli-start.jpg" alt="" />
-        </div>
-        <div class="entry-copy">
-          <p>北宋 · 王希孟</p>
-          <h2 id="entry-title">千里江山图</h2>
-          <span>展卷，入画</span>
-        </div>
+      <div class="entry-panorama" aria-hidden="true">
+        <img src="./assets/qianli-world.jpg" alt="" />
+      </div>
+      <div class="entry-scrim" aria-hidden="true"></div>
+      <div class="entry-copy">
+        <p>北宋 · 王希孟</p>
+        <h2 id="entry-title">千里江山图</h2>
+        <span>展卷</span>
       </div>
       <div class="entry-meta">
         <span>绢本设色</span>
         <span class="entry-rule" aria-hidden="true"></span>
-        <span>故宫博物院藏</span>
+        <span>纵 51.3 厘米 · 横 1191.5 厘米</span>
       </div>
-      <button class="enter-button" id="enter-button" type="button">入画</button>
+      <button class="enter-button" id="enter-button" type="button" disabled>
+        <span>入画</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h13M13 6l6 6-6 6" />
+        </svg>
+      </button>
+      <p class="entry-colophon">故宫博物院藏</p>
     </section>
 
     <div class="loading" id="loading" role="status" aria-live="polite">
@@ -173,7 +180,7 @@
       </figure>
 
       <div class="dialog-foot">
-        <p>绢本设色，纵 51.3 厘米，横 1191.5 厘米。实时画境取自原画笔触，仅作缓慢游卷、远近与气流处理。</p>
+        <p>绢本设色，纵 51.3 厘米，横 1191.5 厘米。实时画境以原画的青绿结构重建山体、河谷、长桥与村舍，可第一人称进入探索。</p>
         <a
           href="https://commons.wikimedia.org/wiki/File:Wang_Ximeng._A_Thousand_Li_of_Rivers_and_Mountains._(Complete,_51,3x1191,5_cm)._1113._Palace_museum,_Beijing.jpg"
           target="_blank"

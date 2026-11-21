@@ -1,0 +1,12 @@
+{
+  "name": "qianli-jiangshan",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "qa": "node ./scripts/capture.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.58.2"
+  }
+}

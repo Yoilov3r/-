@@ -1,0 +1,708 @@
+{
+  "desktop": {
+    "title": "走进千里江山图",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scrollWidth": 1440,
+    "horizontalOverflow": false,
+    "bodyReady": "true",
+    "bodyEntryPhase": "live",
+    "renderer": "webgl",
+    "state": {
+      "position": [
+        7.5,
+        2.6348778363784136,
+        31
+      ],
+      "yaw": 0.78,
+      "pitch": -0.12,
+      "fov": 44.440000000000005,
+      "ground": 0.7848778363784134,
+      "currentSpot": "pines",
+      "isLive": true,
+      "renderer": "webgl",
+      "onBridge": false
+    },
+    "canvas": {
+      "width": 1440,
+      "height": 900,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "cssOpacity": "1"
+    },
+    "titleBox": {
+      "left": 78,
+      "top": 607,
+      "right": 688,
+      "bottom": 820,
+      "width": 610,
+      "height": 213
+    },
+    "controlsBox": {
+      "left": 1020,
+      "top": 839,
+      "right": 1382,
+      "bottom": 872,
+      "width": 362,
+      "height": 33
+    },
+    "joystickBox": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "width": 0,
+      "height": 0
+    },
+    "routeMenu": {
+      "expanded": "false",
+      "open": false,
+      "bodyClass": false
+    },
+    "sceneCopyOpacity": "0",
+    "visibleImages": [
+      {
+        "src": "./assets/qianli-world.jpg",
+        "loaded": true,
+        "width": 7438,
+        "height": 1600
+      },
+      {
+        "src": "./assets/qianli-world.jpg",
+        "loaded": true,
+        "width": 7438,
+        "height": 1600
+      }
+    ],
+    "h1": {
+      "text": "走进\n千里江山图。",
+      "fontSize": "72px"
+    },
+    "entryState": {
+      "position": [
+        0,
+        2.4268110610896105,
+        58
+      ],
+      "yaw": 0,
+      "pitch": 0.075,
+      "fov": 61,
+      "ground": 0.5768110610896104,
+      "currentSpot": "valley",
+      "isLive": false,
+      "renderer": "webgl",
+      "onBridge": false
+    },
+    "entryVisible": true,
+    "startState": {
+      "position": [
+        0,
+        2.4268110610896105,
+        58
+      ],
+      "yaw": 0,
+      "pitch": 0.075,
+      "fov": 61,
+      "ground": 0.5768110610896104,
+      "currentSpot": "valley",
+      "isLive": true,
+      "renderer": "webgl",
+      "onBridge": false
+    },
+    "interactions": {
+      "keyboard": {
+        "before": {
+          "position": [
+            0,
+            2.4268110610896105,
+            58
+          ],
+          "yaw": 0,
+          "pitch": 0.075,
+          "fov": 61,
+          "ground": 0.5768110610896104,
+          "currentSpot": "valley",
+          "isLive": true,
+          "renderer": "webgl",
+          "onBridge": false
+        },
+        "after": {
+          "position": [
+            0,
+            2.4822916184075536,
+            54.002720000001055
+          ],
+          "yaw": 0,
+          "pitch": 0.075,
+          "fov": 61,
+          "ground": 0.6322916184075538,
+          "currentSpot": "valley",
+          "isLive": true,
+          "renderer": "webgl",
+          "onBridge": false
+        },
+        "deltaX": 0,
+        "deltaZ": 3.997279999998945,
+        "moved": true
+      },
+      "strafe": {
+        "deltaX": 2.9075200000010435,
+        "deltaZ": 0,
+        "moved": true
+      },
+      "run": {
+        "distance": 5.960640000002094,
+        "accelerated": true
+      },
+      "drag": {
+        "deltaYaw": 0.6048002563476562,
+        "deltaPitch": 0.1296,
+        "moved": true
+      },
+      "wheel": {
+        "beforeFov": 61,
+        "afterFov": 45.21576173300162,
+        "changed": true
+      },
+      "travel": {
+        "position": [
+          17,
+          2.90496032151245,
+          31
+        ],
+        "currentSpot": "pines",
+        "activeButton": "pines",
+        "readout": "画中 · 松风",
+        "reachedPines": true
+      },
+      "dialog": {
+        "closed": true,
+        "referenceChanged": true,
+        "captionChanged": true,
+        "bridgeSeam": {
+          "insideBridge": {
+            "z": 23.98,
+            "deck": 0.48021616320555055,
+            "ground": 0.48021616320555055,
+            "terrain": -0.38716974070458465
+          },
+          "bridgeEnd": {
+            "z": 24,
+            "deck": 0.48,
+            "ground": 0.48,
+            "terrain": -0.3833901989468858
+          },
+          "approachMiddle": {
+            "z": 27.5,
+            "deck": 0.48,
+            "ground": 0.7984271144867773,
+            "terrain": 0.3973953357746481
+          },
+          "approachEnd": {
+            "z": 31,
+            "deck": 0.48,
+            "ground": 1.1168542289735546,
+            "terrain": 1.0918542289735547
+          },
+          "outerGround": {
+            "z": 31.02,
+            "deck": 0.48,
+            "ground": 1.0939978648101183,
+            "terrain": 1.0939978648101183
+          }
+        }
+      },
+      "placement": {
+        "visibleWaterHalf": 15.5,
+        "checked": 23,
+        "violations": [],
+        "pines": [
+          [
+            -11,
+            55,
+            41.048
+          ],
+          [
+            12,
+            52,
+            34.86
+          ],
+          [
+            -20,
+            46,
+            33.256
+          ],
+          [
+            21,
+            42,
+            23.757
+          ],
+          [
+            -45,
+            20,
+            9.822
+          ],
+          [
+            40,
+            23.98,
+            4.053
+          ],
+          [
+            -53,
+            -27,
+            5.712
+          ],
+          [
+            49,
+            -15,
+            4.324
+          ],
+          [
+            -29,
+            -38,
+            18.655
+          ],
+          [
+            -15,
+            -38,
+            20.404
+          ],
+          [
+            26,
+            -42,
+            29.783
+          ],
+          [
+            38,
+            -36,
+            24.801
+          ],
+          [
+            -72,
+            16,
+            6.587
+          ],
+          [
+            68,
+            25.352,
+            5.156
+          ],
+          [
+            -63,
+            -57,
+            35.414
+          ],
+          [
+            62,
+            -54,
+            43.379
+          ]
+        ],
+        "pavilions": [
+          [
+            18,
+            22.492,
+            4.6
+          ]
+        ]
+      },
+      "sceneDetail": {
+        "pineTrees": 16,
+        "pineCanopyPlanes": 48,
+        "pineVariants": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "grassInstances": 2200,
+        "grassPlanes": 3,
+        "panoramaLayers": 2,
+        "panoramaVeil": true
+      }
+    },
+    "consoleErrors": [],
+    "failedRequests": []
+  },
+  "mobile": {
+    "title": "走进千里江山图",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollWidth": 390,
+    "horizontalOverflow": false,
+    "bodyReady": "true",
+    "bodyEntryPhase": "live",
+    "renderer": "webgl",
+    "state": {
+      "position": [
+        -18.7629454295604,
+        3.0205036060617596,
+        28.390817175200826
+      ],
+      "yaw": -0.8,
+      "pitch": -0.015,
+      "fov": 61,
+      "ground": 1.1705036060617593,
+      "currentSpot": "village",
+      "isLive": true,
+      "renderer": "webgl",
+      "onBridge": false
+    },
+    "canvas": {
+      "width": 390,
+      "height": 844,
+      "clientWidth": 390,
+      "clientHeight": 844,
+      "cssOpacity": "1"
+    },
+    "titleBox": {
+      "left": 22,
+      "top": 592,
+      "right": 368,
+      "bottom": 702,
+      "width": 346,
+      "height": 110
+    },
+    "controlsBox": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "width": 0,
+      "height": 0
+    },
+    "joystickBox": {
+      "left": 20,
+      "top": 722,
+      "right": 116,
+      "bottom": 818,
+      "width": 96,
+      "height": 96
+    },
+    "routeMenu": {
+      "expanded": "false",
+      "open": false,
+      "bodyClass": false
+    },
+    "sceneCopyOpacity": "0",
+    "visibleImages": [
+      {
+        "src": "./assets/qianli-world.jpg",
+        "loaded": true,
+        "width": 7438,
+        "height": 1600
+      },
+      {
+        "src": "./assets/qianli-world.jpg",
+        "loaded": true,
+        "width": 7438,
+        "height": 1600
+      }
+    ],
+    "h1": {
+      "text": "走进\n千里江山图。",
+      "fontSize": "42.12px"
+    },
+    "entryState": {
+      "position": [
+        0,
+        2.4268110610896105,
+        58
+      ],
+      "yaw": 0,
+      "pitch": 0.075,
+      "fov": 61,
+      "ground": 0.5768110610896104,
+      "currentSpot": "valley",
+      "isLive": false,
+      "renderer": "webgl",
+      "onBridge": false
+    },
+    "entryVisible": true,
+    "startState": {
+      "position": [
+        0,
+        2.4268110610896105,
+        58
+      ],
+      "yaw": 0,
+      "pitch": 0.075,
+      "fov": 61,
+      "ground": 0.5768110610896104,
+      "currentSpot": "valley",
+      "isLive": true,
+      "renderer": "webgl",
+      "onBridge": false
+    },
+    "interactions": {
+      "menu": {
+        "opened": true,
+        "closedByEscape": true,
+        "closedAfterTravel": true
+      },
+      "travel": {
+        "currentSpot": "village",
+        "position": [
+          -24,
+          2.4262469877411315,
+          27
+        ],
+        "reachedVillage": true
+      },
+      "joystick": {
+        "deltaX": 4.263907327540469,
+        "deltaZ": 1.1323761218913795,
+        "moved": true
+      }
+    },
+    "consoleErrors": [],
+    "failedRequests": []
+  },
+  "verification": {
+    "passed": true,
+    "assertionCount": 59,
+    "failedCount": 0,
+    "assertions": [
+      {
+        "name": "desktop.title",
+        "passed": true
+      },
+      {
+        "name": "desktop.viewport",
+        "passed": true
+      },
+      {
+        "name": "desktop.scrollWidth",
+        "passed": true
+      },
+      {
+        "name": "desktop.ready",
+        "passed": true
+      },
+      {
+        "name": "desktop.entryPhase",
+        "passed": true
+      },
+      {
+        "name": "desktop.webgl",
+        "passed": true
+      },
+      {
+        "name": "desktop.stateLive",
+        "passed": true
+      },
+      {
+        "name": "desktop.entryNotLive",
+        "passed": true
+      },
+      {
+        "name": "desktop.entryVisible",
+        "passed": true
+      },
+      {
+        "name": "desktop.startLive",
+        "passed": true
+      },
+      {
+        "name": "desktop.startPosition",
+        "passed": true
+      },
+      {
+        "name": "desktop.canvasSize",
+        "passed": true
+      },
+      {
+        "name": "desktop.canvasVisible",
+        "passed": true
+      },
+      {
+        "name": "desktop.imagesLoaded",
+        "passed": true
+      },
+      {
+        "name": "desktop.heading",
+        "passed": true
+      },
+      {
+        "name": "desktop.consoleErrors",
+        "passed": true
+      },
+      {
+        "name": "desktop.failedRequests",
+        "passed": true
+      },
+      {
+        "name": "desktop.titleInside",
+        "passed": true
+      },
+      {
+        "name": "desktop.routeMenuClosed",
+        "passed": true
+      },
+      {
+        "name": "desktop.controlsInside",
+        "passed": true
+      },
+      {
+        "name": "desktop.copyAvoidsControls",
+        "passed": true
+      },
+      {
+        "name": "mobile.title",
+        "passed": true
+      },
+      {
+        "name": "mobile.viewport",
+        "passed": true
+      },
+      {
+        "name": "mobile.scrollWidth",
+        "passed": true
+      },
+      {
+        "name": "mobile.ready",
+        "passed": true
+      },
+      {
+        "name": "mobile.entryPhase",
+        "passed": true
+      },
+      {
+        "name": "mobile.webgl",
+        "passed": true
+      },
+      {
+        "name": "mobile.stateLive",
+        "passed": true
+      },
+      {
+        "name": "mobile.entryNotLive",
+        "passed": true
+      },
+      {
+        "name": "mobile.entryVisible",
+        "passed": true
+      },
+      {
+        "name": "mobile.startLive",
+        "passed": true
+      },
+      {
+        "name": "mobile.startPosition",
+        "passed": true
+      },
+      {
+        "name": "mobile.canvasSize",
+        "passed": true
+      },
+      {
+        "name": "mobile.canvasVisible",
+        "passed": true
+      },
+      {
+        "name": "mobile.imagesLoaded",
+        "passed": true
+      },
+      {
+        "name": "mobile.heading",
+        "passed": true
+      },
+      {
+        "name": "mobile.consoleErrors",
+        "passed": true
+      },
+      {
+        "name": "mobile.failedRequests",
+        "passed": true
+      },
+      {
+        "name": "mobile.titleInside",
+        "passed": true
+      },
+      {
+        "name": "mobile.routeMenuClosed",
+        "passed": true
+      },
+      {
+        "name": "mobile.joystickInside",
+        "passed": true
+      },
+      {
+        "name": "mobile.copyAvoidsJoystick",
+        "passed": true
+      },
+      {
+        "name": "desktop.keyboard",
+        "passed": true
+      },
+      {
+        "name": "desktop.strafe",
+        "passed": true
+      },
+      {
+        "name": "desktop.run",
+        "passed": true
+      },
+      {
+        "name": "desktop.drag",
+        "passed": true
+      },
+      {
+        "name": "desktop.wheel",
+        "passed": true
+      },
+      {
+        "name": "desktop.travel",
+        "passed": true
+      },
+      {
+        "name": "desktop.referenceDialog",
+        "passed": true
+      },
+      {
+        "name": "desktop.bridgeInsideDeck",
+        "passed": true
+      },
+      {
+        "name": "desktop.bridgeEndDeck",
+        "passed": true
+      },
+      {
+        "name": "desktop.bridgeApproach",
+        "passed": true
+      },
+      {
+        "name": "desktop.placementBoundary",
+        "passed": true
+      },
+      {
+        "name": "desktop.pineVolume",
+        "passed": true
+      },
+      {
+        "name": "desktop.grassBrushVolume",
+        "passed": true
+      },
+      {
+        "name": "desktop.panoramaDepth",
+        "passed": true
+      },
+      {
+        "name": "mobile.menu",
+        "passed": true
+      },
+      {
+        "name": "mobile.travel",
+        "passed": true
+      },
+      {
+        "name": "mobile.joystick",
+        "passed": true
+      }
+    ]
+  }
+}
