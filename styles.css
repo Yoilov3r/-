@@ -87,7 +87,7 @@ a:focus-visible,
   z-index: 1;
   display: block;
   background: transparent;
-  cursor: grab;
+  cursor: crosshair;
   opacity: 0;
   touch-action: none;
   transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1);
@@ -98,7 +98,11 @@ body[data-ready="true"]:not([data-renderer="fallback"]) #scene {
 }
 
 #scene:active {
-  cursor: grabbing;
+  cursor: crosshair;
+}
+
+body.is-pointer-locked #scene {
+  cursor: none;
 }
 
 .reticle {

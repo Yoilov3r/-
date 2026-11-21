@@ -29,7 +29,7 @@ const WORLD = {
   maxX: 112,
   minZ: -116,
   maxZ: 96,
-  segments: coarsePointer.matches ? 230 : 340,
+  segments: coarsePointer.matches ? 200 : 280,
   riverHalf: 12.5,
 };
 const WATER_VISIBLE_PADDING = 3;
@@ -105,7 +105,7 @@ camera.rotation.order = "YXZ";
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
-  antialias: true,
+  antialias: !coarsePointer.matches,
   alpha: false,
   powerPreference: "high-performance",
 });
@@ -114,6 +114,8 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.02;
 renderer.shadowMap.enabled = !coarsePointer.matches;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;
+renderer.shadowMap.needsUpdate = true;
 
 const keys = new Set();
 const joystickInput = { x: 0, y: 0 };
@@ -127,6 +129,10 @@ const sceneDetailAudit = {
   pineVariants: new Set(),
   grassInstances: 0,
   grassPlanes: 3,
+  grassGrounded: false,
+  grassMaterial: "alpha-cutout",
+  grassVertexColors: false,
+  terrainMaterial: "baked-vertex-color",
   panoramaLayers: 0,
   panoramaVeil: false,
 };
@@ -143,7 +149,7 @@ let elapsed = 0;
 let toastTimer = 0;
 let statusTimer = 0;
 let roamingTimer = 0;
-let dragPointerId = null;
+let touchLookPointerId = null;
 let lastPointerX = 0;
 let lastPointerY = 0;
 let joystickPointerId = null;
@@ -155,6 +161,9 @@ let pineTrunkMaterial = null;
 let pineTrunkGeometry = null;
 let travel = null;
 let isMoving = false;
+let perfWindowStart = performance.now();
+let perfFrameCount = 0;
+let measuredFps = 0;
 
 const player = new THREE.Vector3(START.x, 0, START.z);
 
@@ -415,6 +424,128 @@ function resetPlayer(announce = true) {
   if (announce) showToast("回到入谷处");
 }
 
+function createTerrainWashTexture() {
+  const textureCanvas = document.createElement("canvas");
+  textureCanvas.width = 1024;
+  textureCanvas.height = 1024;
+  const context = textureCanvas.getContext("2d");
+  const base = context.createLinearGradient(0, 0, textureCanvas.width, textureCanvas.height);
+  base.addColorStop(0, "#e4dcc3");
+  base.addColorStop(0.48, "#d7d2b8");
+  base.addColorStop(1, "#c9c9ad");
+  context.fillStyle = base;
+  context.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
+
+  const washes = [
+    [132, 105, 74, 0.075],
+    [84, 116, 84, 0.065],
+    [79, 111, 118, 0.055],
+    [188, 161, 97, 0.052],
+  ];
+  for (let index = 0; index < 220; index += 1) {
+    const x = hash2(index, 1.7) * textureCanvas.width;
+    const y = hash2(index, 7.3) * textureCanvas.height;
+    const radius = 42 + hash2(index, 4.9) * 170;
+    const wash = washes[index % washes.length];
+    const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
+    gradient.addColorStop(
+      0,
+      `rgba(${wash[0]}, ${wash[1]}, ${wash[2]}, ${wash[3] * (0.7 + hash2(index, 2.2))})`,
+    );
+    gradient.addColorStop(
+      0.7,
+      `rgba(${wash[0]}, ${wash[1]}, ${wash[2]}, ${wash[3] * 0.22})`,
+    );
+    gradient.addColorStop(1, `rgba(${wash[0]}, ${wash[1]}, ${wash[2]}, 0)`);
+    context.fillStyle = gradient;
+    context.beginPath();
+    context.ellipse(
+      x,
+      y,
+      radius * (0.45 + hash2(index, 8.1) * 0.6),
+      radius * (0.2 + hash2(index, 5.5) * 0.36),
+      hash2(index, 9.7) * Math.PI,
+      0,
+      Math.PI * 2,
+    );
+    context.fill();
+  }
+
+  context.lineCap = "round";
+  for (let index = 0; index < 1500; index += 1) {
+    const x = hash2(index, 3.1) * textureCanvas.width;
+    const y = hash2(index, 6.8) * textureCanvas.height;
+    const length = 3 + hash2(index, 1.4) * 22;
+    const angle = -0.28 + (hash2(index, 4.2) - 0.5) * 0.24;
+    context.strokeStyle = `rgba(74, 65, 42, ${0.014 + hash2(index, 7.9) * 0.035})`;
+    context.lineWidth = 0.4 + hash2(index, 2.6) * 1.15;
+    context.beginPath();
+    context.moveTo(x, y);
+    context.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+    context.stroke();
+  }
+
+  context.globalCompositeOperation = "lighter";
+  for (let index = 0; index < 360; index += 1) {
+    const x = hash2(index, 2.9) * textureCanvas.width;
+    const y = hash2(index, 8.5) * textureCanvas.height;
+    context.fillStyle = `rgba(247, 238, 207, ${0.012 + hash2(index, 5.1) * 0.025})`;
+    context.fillRect(x, y, 0.7 + hash2(index, 4.4) * 1.4, 10 + hash2(index, 6.6) * 42);
+  }
+  context.globalCompositeOperation = "source-over";
+
+  const texture = new THREE.CanvasTexture(textureCanvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return texture;
+}
+
+function paintTerrainColors(geometry) {
+  const positions = geometry.attributes.position;
+  const normals = geometry.attributes.normal;
+  const colors = new Float32Array(positions.count * 3);
+  const tint = new THREE.Color();
+  const lowland = new THREE.Color("#a08b58");
+  const moss = new THREE.Color("#71815a");
+  const mineral = new THREE.Color("#577765");
+  const azurite = new THREE.Color("#55788a");
+  const stone = new THREE.Color("#8c9177");
+  const ink = new THREE.Color("#26372f");
+  const sunDirection = new THREE.Vector3(-0.42, 0.78, 0.45).normalize();
+
+  for (let index = 0; index < positions.count; index += 1) {
+    const x = positions.getX(index);
+    const y = positions.getY(index);
+    const z = positions.getZ(index);
+    const normal = new THREE.Vector3(
+      normals.getX(index),
+      normals.getY(index),
+      normals.getZ(index),
+    );
+    const altitude = smoothstep(-0.4, 32, y);
+    const slope = 1 - clamp(normal.y, 0, 1);
+    const broad = fbm(x * 0.046, z * 0.046, 3);
+    const band = smoothstep(0.36, 0.74, fbm(x * 0.08 + y * 0.02, z * 0.08, 3));
+    const light = Math.max(normal.dot(sunDirection), 0);
+    const shade = 0.82 + light * 0.27 + (normal.y - 0.7) * 0.08;
+
+    tint.copy(lowland);
+    tint.lerp(moss, (1 - altitude) * 0.52 + broad * 0.18);
+    tint.lerp(mineral, altitude * (0.38 + band * 0.22));
+    tint.lerp(azurite, smoothstep(0.26, 0.8, altitude) * (0.28 + band * 0.3));
+    tint.lerp(stone, smoothstep(0.12, 0.72, slope) * 0.22);
+    tint.lerp(ink, smoothstep(0.5, 0.92, slope) * 0.18);
+    tint.multiplyScalar(clamp(shade, 0.74, 1.12));
+    colors[index * 3] = tint.r;
+    colors[index * 3 + 1] = tint.g;
+    colors[index * 3 + 2] = tint.b;
+  }
+
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+}
+
 function createTerrain() {
   const width = WORLD.maxX - WORLD.minX;
   const depth = WORLD.maxZ - WORLD.minZ;
@@ -430,135 +561,16 @@ function createTerrain() {
   positions.needsUpdate = true;
   geometry.computeVertexNormals();
 
-  const material = new THREE.ShaderMaterial({
-    uniforms: {
-      uSunDirection: { value: new THREE.Vector3(-0.42, 0.78, 0.45).normalize() },
-      uFogColor: { value: new THREE.Color("#9d8d60") },
-      uFogDensity: { value: 0.0036 },
-    },
-    vertexShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vWorldNormal;
-
-      void main() {
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPosition.xyz;
-        vWorldNormal = normalize(mat3(modelMatrix) * normal);
-        gl_Position = projectionMatrix * viewMatrix * worldPosition;
-      }
-    `,
-    fragmentShader: `
-      precision highp float;
-
-      uniform vec3 uSunDirection;
-      uniform vec3 uFogColor;
-      uniform float uFogDensity;
-
-      varying vec3 vWorldPosition;
-      varying vec3 vWorldNormal;
-
-      float hash12(vec2 point) {
-        vec3 p3 = fract(vec3(point.xyx) * 0.1031);
-        p3 += dot(p3, p3.yzx + 33.33);
-        return fract((p3.x + p3.y) * p3.z);
-      }
-
-      float noise(vec2 point) {
-        vec2 cell = floor(point);
-        vec2 local = fract(point);
-        local = local * local * (3.0 - 2.0 * local);
-        float a = hash12(cell);
-        float b = hash12(cell + vec2(1.0, 0.0));
-        float c = hash12(cell + vec2(0.0, 1.0));
-        float d = hash12(cell + vec2(1.0, 1.0));
-        return mix(mix(a, b, local.x), mix(c, d, local.x), local.y);
-      }
-
-      float fbm(vec2 point) {
-        float value = 0.0;
-        float amplitude = 0.5;
-        for (int index = 0; index < 5; index++) {
-          value += noise(point) * amplitude;
-          point = point * 2.02 + vec2(11.7, 7.3);
-          amplitude *= 0.5;
-        }
-        return value;
-      }
-
-      vec3 srgb(vec3 value) {
-        return pow(value, vec3(2.2));
-      }
-
-      void main() {
-        vec3 normal = normalize(vWorldNormal);
-        float slope = 1.0 - clamp(normal.y, 0.0, 1.0);
-        float height = clamp(vWorldPosition.y / 52.0, 0.0, 1.0);
-        float broad = fbm(vWorldPosition.xz * 0.038);
-        float fine = fbm(vWorldPosition.xz * 0.34 + vWorldPosition.y * 0.15);
-
-        vec3 ochre = srgb(vec3(0.40, 0.31, 0.15));
-        vec3 moss = srgb(vec3(0.20, 0.32, 0.20));
-        vec3 malachite = srgb(vec3(0.19, 0.43, 0.30));
-        vec3 azurite = srgb(vec3(0.12, 0.33, 0.54));
-        vec3 ink = srgb(vec3(0.055, 0.09, 0.075));
-        vec3 stoneWash = srgb(vec3(0.34, 0.39, 0.29));
-
-        float lowland = 1.0 - smoothstep(0.06, 0.32, height);
-        float mineralBand = smoothstep(0.045, 0.34, height + broad * 0.08);
-        float cliffBand = smoothstep(0.12, 0.78, slope);
-
-        vec3 tint = mix(ochre * (0.88 + broad * 0.15), moss, lowland * 0.42);
-        tint = mix(tint, malachite, mineralBand * 0.72);
-        tint = mix(tint, azurite, smoothstep(0.16, 0.58, height) * (0.5 + cliffBand * 0.34));
-        tint = mix(tint, stoneWash, smoothstep(0.48, 0.95, 1.0 - slope) * 0.12);
-
-        float strata = smoothstep(0.62, 0.9, fbm(vec2(
-          vWorldPosition.x * 0.16 + broad * 6.0,
-          vWorldPosition.y * 0.86 + vWorldPosition.z * 0.08
-        )));
-        tint = mix(tint, tint * 0.7, strata * (0.18 + cliffBand * 0.28));
-
-        float cun = smoothstep(
-          0.58,
-          0.82,
-          fbm(vWorldPosition.xz * vec2(0.28, 2.2) + vWorldPosition.y * 0.19)
-        );
-        float mineral = smoothstep(0.52, 0.9, fine);
-        tint = mix(tint, ink, cun * (0.18 + cliffBand * 0.34));
-        tint = mix(tint, malachite * 1.08, mineral * height * 0.16);
-
-        float wash = fbm(vec2(
-          vWorldPosition.x * 0.065,
-          vWorldPosition.y * 0.32 + vWorldPosition.z * 0.038
-        ));
-        float silkWave = 0.5 + 0.5 * sin(
-          (vWorldPosition.x * 2.4 + vWorldPosition.z * 0.9 + vWorldPosition.y * 1.7) * 11.0
-          + fbm(vWorldPosition.xz * 0.12) * 5.0
-        );
-        float fiber = smoothstep(0.76, 0.97, silkWave);
-        float pigmentGrain = hash12(floor(vWorldPosition.xz * 12.0 + vWorldPosition.y * 7.0));
-        tint *= 0.945 + wash * 0.095;
-        tint *= 0.968 + fiber * 0.055;
-        tint += vec3(0.011, 0.013, 0.008) * (pigmentGrain - 0.5);
-        tint = mix(vec3(dot(tint, vec3(0.299, 0.587, 0.114))), tint, 1.14);
-
-        float diffuse = max(dot(normal, normalize(uSunDirection)), 0.0);
-        float bounce = max(dot(normal, vec3(0.0, -0.4, 1.0)), 0.0);
-        tint *= 0.63 + diffuse * 0.29 + bounce * 0.06;
-
-        float distanceToCamera = distance(cameraPosition, vWorldPosition);
-        float fog = 1.0 - exp(-distanceToCamera * distanceToCamera * uFogDensity * uFogDensity);
-        tint = mix(tint, uFogColor, clamp(fog, 0.0, 0.44));
-
-        gl_FragColor = vec4(tint, 1.0);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }
-    `,
+  paintTerrainColors(geometry);
+  const material = new THREE.MeshBasicMaterial({
+    map: createTerrainWashTexture(),
+    vertexColors: true,
+    fog: true,
+    toneMapped: true,
   });
 
   const mesh = new THREE.Mesh(geometry, material);
-  mesh.receiveShadow = true;
+  mesh.receiveShadow = false;
   mesh.name = "Painted Qianli terrain";
   scene.add(mesh);
   return mesh;
@@ -1628,11 +1640,11 @@ function createGrass() {
     context.lineCap = "round";
     context.lineJoin = "round";
     const colors = [
-      "rgba(116, 139, 89, 0.9)",
-      "rgba(152, 153, 91, 0.88)",
-      "rgba(93, 127, 91, 0.9)",
-      "rgba(178, 151, 83, 0.82)",
-      "rgba(191, 174, 108, 0.76)",
+      "rgba(247, 241, 220, 0.98)",
+      "rgba(229, 235, 210, 0.96)",
+      "rgba(240, 226, 190, 0.96)",
+      "rgba(218, 232, 204, 0.95)",
+      "rgba(249, 229, 188, 0.94)",
     ];
 
     for (let leaf = 0; leaf < 18; leaf += 1) {
@@ -1642,7 +1654,7 @@ function createGrass() {
       const width = 3.5 + hash2(leaf, 4.4) * 9.5;
       const bend = (hash2(leaf, 2.5) - 0.5) * 34;
       context.fillStyle = colors[leaf % colors.length];
-      context.globalAlpha = 0.58 + hash2(leaf, 8.6) * 0.34;
+      context.globalAlpha = 0.84 + hash2(leaf, 8.6) * 0.16;
       context.beginPath();
       context.moveTo(baseX - width, 188);
       context.bezierCurveTo(
@@ -1670,7 +1682,7 @@ function createGrass() {
       const tipX = 14 + hash2(blade, 6.7) * 228;
       const tipY = 10 + hash2(blade, 9.1) * 108;
       context.strokeStyle = colors[(blade + 2) % colors.length];
-      context.globalAlpha = 0.58 + hash2(blade, 1.8) * 0.36;
+      context.globalAlpha = 0.8 + hash2(blade, 1.8) * 0.2;
       context.lineWidth = 0.8 + hash2(blade, 4.8) * 2.1;
       context.beginPath();
       context.moveTo(originX, 188);
@@ -1685,10 +1697,20 @@ function createGrass() {
 
     const rootWash = context.createLinearGradient(0, 142, 0, 192);
     rootWash.addColorStop(0, "rgba(75, 92, 55, 0)");
-    rootWash.addColorStop(1, "rgba(69, 79, 45, 0.24)");
+    rootWash.addColorStop(1, "rgba(67, 75, 45, 0.9)");
     context.globalAlpha = 1;
     context.fillStyle = rootWash;
     context.fillRect(38, 142, 180, 50);
+
+    for (let root = 0; root < 26; root += 1) {
+      const rootX = 88 + hash2(root, 7.1) * 80;
+      context.strokeStyle = `rgba(67, 73, 44, ${0.72 + hash2(root, 4.7) * 0.24})`;
+      context.lineWidth = 1.2 + hash2(root, 2.9) * 2.4;
+      context.beginPath();
+      context.moveTo(rootX, 190);
+      context.lineTo(rootX + (hash2(root, 8.4) - 0.5) * 18, 149);
+      context.stroke();
+    }
 
     grassTexture = new THREE.CanvasTexture(textureCanvas);
     grassTexture.colorSpace = THREE.SRGBColorSpace;
@@ -1696,29 +1718,45 @@ function createGrass() {
   }
 
   const count = coarsePointer.matches ? 1150 : 2200;
-  const geometry = createCrossedBrushGeometry(1.18, 0.94, sceneDetailAudit.grassPlanes);
+  const geometry = createCrossedBrushGeometry(1.04, 0.72, sceneDetailAudit.grassPlanes);
   const grassMaterial = new THREE.MeshBasicMaterial({
     map: grassTexture,
-    vertexColors: true,
     side: THREE.DoubleSide,
-    alphaTest: 0.015,
-    transparent: true,
-    depthWrite: false,
-    toneMapped: false,
+    alphaTest: 0.28,
+    transparent: false,
+    depthWrite: true,
+    fog: true,
+    toneMapped: true,
   });
+  sceneDetailAudit.grassVertexColors = grassMaterial.vertexColors;
   const mesh = new THREE.InstancedMesh(geometry, grassMaterial, count);
   const grassColors = [0xf3ecd5, 0xe2e6c7, 0xf0d9af, 0xd6e1c4, 0xe9d2a5];
+  const terrainNormal = new THREE.Vector3();
+  const upVector = new THREE.Vector3(0, 1, 0);
+  const baseSink = 0.085;
+  let slopeRejected = 0;
   let placed = 0;
-  for (let index = 0; index < count * 5 && placed < count; index += 1) {
+  for (let index = 0; index < count * 7 && placed < count; index += 1) {
     const x = -92 + hash2(index, 0.4) * 184;
     const z = 2 + hash2(index, 8.9) * 94;
     const riverDistance = riverDistanceAt(x, z);
     if (isOnVisibleWater(x, z, 1.8)) continue;
     const terrainHeight = heightAt(x, z);
     if (terrainHeight > 3.8 || riverDistance > 38) continue;
+    const sampleDistance = 0.32;
+    terrainNormal.set(
+      heightAt(x - sampleDistance, z) - heightAt(x + sampleDistance, z),
+      sampleDistance * 2,
+      heightAt(x, z - sampleDistance) - heightAt(x, z + sampleDistance),
+    ).normalize();
+    if (terrainNormal.y < 0.68) {
+      slopeRejected += 1;
+      continue;
+    }
     const scale = 0.72 + hash2(index, 5.7) * 1.08;
-    dummy.position.set(x, terrainHeight + 0.03, z);
-    dummy.rotation.set(0, hash2(index, 6.1) * Math.PI * 2, 0);
+    dummy.position.set(x, terrainHeight - baseSink, z);
+    dummy.quaternion.setFromUnitVectors(upVector, terrainNormal);
+    dummy.rotateY(hash2(index, 6.1) * Math.PI * 2);
     dummy.scale.set(
       0.88 + hash2(index, 2.8) * 0.5,
       scale,
@@ -1732,6 +1770,9 @@ function createGrass() {
   }
   mesh.count = placed;
   sceneDetailAudit.grassInstances = placed;
+  sceneDetailAudit.grassGrounded = true;
+  sceneDetailAudit.grassBaseSink = baseSink;
+  sceneDetailAudit.grassSlopeRejected = slopeRejected;
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   scene.add(mesh);
@@ -1817,7 +1858,7 @@ function addLighting() {
   sun.position.set(-44, 78, 36);
   sun.castShadow = !coarsePointer.matches;
   if (sun.castShadow) {
-    sun.shadow.mapSize.set(1536, 1536);
+    sun.shadow.mapSize.set(1024, 1024);
     sun.shadow.camera.left = -90;
     sun.shadow.camera.right = 90;
     sun.shadow.camera.top = 90;
@@ -1836,7 +1877,7 @@ function addLighting() {
 function resize() {
   const width = window.innerWidth;
   const height = window.innerHeight;
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, coarsePointer.matches ? 1.3 : 1.55);
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, coarsePointer.matches ? 1 : 1.2);
   renderer.setPixelRatio(pixelRatio);
   renderer.setSize(width, height, false);
   camera.aspect = width / Math.max(height, 1);
@@ -1896,8 +1937,11 @@ function frame() {
     ? Math.sin(walkCycle) * 0.035 + Math.abs(Math.sin(walkCycle * 0.5)) * 0.025
     : 0;
   setCameraTransform(bob);
-  camera.fov = damp(camera.fov, fov, 9, dt);
-  camera.updateProjectionMatrix();
+  const nextFov = damp(camera.fov, fov, 9, dt);
+  if (Math.abs(nextFov - camera.fov) > 0.001) {
+    camera.fov = nextFov;
+    camera.updateProjectionMatrix();
+  }
 
   if (waterMaterial) waterMaterial.uniforms.uTime.value = elapsed;
 
@@ -1914,6 +1958,13 @@ function frame() {
   }
 
   renderer.render(scene, camera);
+  perfFrameCount += 1;
+  const now = performance.now();
+  if (now - perfWindowStart >= 700) {
+    measuredFps = (perfFrameCount * 1000) / (now - perfWindowStart);
+    perfFrameCount = 0;
+    perfWindowStart = now;
+  }
   requestAnimationFrame(frame);
 }
 
@@ -1993,9 +2044,31 @@ window.addEventListener("blur", () => {
   joystickKnob.style.transform = "translate(-50%, -50%)";
 });
 
+function applyLookDelta(deltaX, deltaY, sensitivity = 1) {
+  yaw -= deltaX * 0.0024 * sensitivity;
+  pitch = clamp(pitch - deltaY * 0.002 * sensitivity, -1.18, 1.08);
+  travel = null;
+  markRoaming();
+}
+
+function requestLookLock() {
+  if (!isLive || referenceDialog.open || coarsePointer.matches) return;
+  if (document.pointerLockElement === canvas) return;
+  try {
+    const request = canvas.requestPointerLock();
+    request?.catch?.(() => {});
+  } catch {
+    // Mouse movement still controls the view when pointer lock is unavailable.
+  }
+}
+
 canvas.addEventListener("pointerdown", (event) => {
   if (!isLive || referenceDialog.open) return;
-  dragPointerId = event.pointerId;
+  if (!coarsePointer.matches && event.pointerType === "mouse") {
+    if (event.button === 0) requestLookLock();
+    return;
+  }
+  touchLookPointerId = event.pointerId;
   lastPointerX = event.clientX;
   lastPointerY = event.clientY;
   travel = null;
@@ -2004,25 +2077,53 @@ canvas.addEventListener("pointerdown", (event) => {
 });
 
 canvas.addEventListener("pointermove", (event) => {
-  if (event.pointerId !== dragPointerId) return;
+  if (!isLive || referenceDialog.open) return;
+  if (!coarsePointer.matches && event.pointerType === "mouse") {
+    if (document.pointerLockElement === canvas) return;
+    const deltaX = event.movementX || event.clientX - lastPointerX;
+    const deltaY = event.movementY || event.clientY - lastPointerY;
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+    if (deltaX || deltaY) applyLookDelta(deltaX, deltaY);
+    return;
+  }
+  if (event.pointerId !== touchLookPointerId) return;
   const deltaX = event.clientX - lastPointerX;
   const deltaY = event.clientY - lastPointerY;
   lastPointerX = event.clientX;
   lastPointerY = event.clientY;
-  yaw -= deltaX * 0.0042;
-  pitch = clamp(pitch - deltaY * 0.0036, -1.18, 1.08);
-  markRoaming();
+  applyLookDelta(deltaX, deltaY, 1.55);
 });
 
-function endDrag(event) {
-  if (event.pointerId !== dragPointerId) return;
-  dragPointerId = null;
+document.addEventListener("mousemove", (event) => {
+  if (!isLive || referenceDialog.open || coarsePointer.matches) return;
+  if (document.pointerLockElement !== canvas) return;
+  if (event.movementX || event.movementY) {
+    applyLookDelta(event.movementX, event.movementY);
+  }
+});
+
+document.addEventListener("pointerlockchange", () => {
+  const locked = document.pointerLockElement === canvas;
+  body.classList.toggle("is-pointer-locked", locked);
+  if (locked) {
+    setLoading("移目");
+    window.clearTimeout(statusTimer);
+    statusTimer = window.setTimeout(() => {
+      if (isLive) setLoading("可行走");
+    }, 720);
+  }
+});
+
+function endTouchLook(event) {
+  if (event.pointerId !== touchLookPointerId) return;
+  touchLookPointerId = null;
 }
 
-canvas.addEventListener("pointerup", endDrag);
-canvas.addEventListener("pointercancel", endDrag);
-canvas.addEventListener("lostpointercapture", () => {
-  dragPointerId = null;
+canvas.addEventListener("pointerup", endTouchLook);
+canvas.addEventListener("pointercancel", endTouchLook);
+canvas.addEventListener("lostpointercapture", (event) => {
+  if (event.pointerId === touchLookPointerId) touchLookPointerId = null;
 });
 
 canvas.addEventListener(
@@ -2259,6 +2360,19 @@ window.__qianliDebug = {
       violations: landPlacements.filter(
         (placement) => placement.clearance <= 0,
       ),
+    };
+  },
+  getPerformanceAudit() {
+    return {
+      fps: Math.round(measuredFps * 10) / 10,
+      pixelRatio: Math.round(renderer.getPixelRatio() * 100) / 100,
+      drawCalls: renderer.info.render.calls,
+      triangles: renderer.info.render.triangles,
+      shadowAutoUpdate: renderer.shadowMap.autoUpdate,
+      terrainMaterial: sceneDetailAudit.terrainMaterial,
+      grassMaterial: sceneDetailAudit.grassMaterial,
+      grassGrounded: sceneDetailAudit.grassGrounded,
+      grassBaseSink: sceneDetailAudit.grassBaseSink,
     };
   },
   getSceneDetailAudit() {

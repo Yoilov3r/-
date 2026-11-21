@@ -18,7 +18,7 @@
       ],
       "yaw": 0.78,
       "pitch": -0.12,
-      "fov": 44.440000000000005,
+      "fov": 44.442622283303066,
       "ground": 0.7848778363784134,
       "currentSpot": "pines",
       "isLive": true,
@@ -41,11 +41,11 @@
       "height": 213
     },
     "controlsBox": {
-      "left": 1020,
+      "left": 1001,
       "top": 839,
       "right": 1382,
       "bottom": 872,
-      "width": 362,
+      "width": 381,
       "height": 33
     },
     "joystickBox": {
@@ -131,39 +131,39 @@
         "after": {
           "position": [
             0,
-            2.4822916184075536,
-            54.002720000001055
+            2.4815829394665636,
+            54.044720000006265
           ],
           "yaw": 0,
           "pitch": 0.075,
           "fov": 61,
-          "ground": 0.6322916184075538,
+          "ground": 0.6315829394665633,
           "currentSpot": "valley",
           "isLive": true,
           "renderer": "webgl",
           "onBridge": false
         },
         "deltaX": 0,
-        "deltaZ": 3.997279999998945,
+        "deltaZ": 3.955279999993735,
         "moved": true
       },
       "strafe": {
-        "deltaX": 2.9075200000010435,
+        "deltaX": 2.9764000000000004,
         "deltaZ": 0,
         "moved": true
       },
       "run": {
-        "distance": 5.960640000002094,
+        "distance": 5.923679999983335,
         "accelerated": true
       },
-      "drag": {
-        "deltaYaw": 0.6048002563476562,
-        "deltaPitch": 0.1296,
+      "look": {
+        "deltaYaw": 0.5519999999999998,
+        "deltaPitch": 0.07200000000000006,
         "moved": true
       },
       "wheel": {
         "beforeFov": 61,
-        "afterFov": 45.21576173300162,
+        "afterFov": 45.21367000143216,
         "changed": true
       },
       "travel": {
@@ -319,8 +319,25 @@
         ],
         "grassInstances": 2200,
         "grassPlanes": 3,
+        "grassGrounded": true,
+        "grassMaterial": "alpha-cutout",
+        "grassVertexColors": false,
+        "terrainMaterial": "baked-vertex-color",
         "panoramaLayers": 2,
-        "panoramaVeil": true
+        "panoramaVeil": true,
+        "grassBaseSink": 0.085,
+        "grassSlopeRejected": 0
+      },
+      "performance": {
+        "fps": 82.9,
+        "pixelRatio": 1,
+        "drawCalls": 170,
+        "triangles": 174750,
+        "shadowAutoUpdate": false,
+        "terrainMaterial": "baked-vertex-color",
+        "grassMaterial": "alpha-cutout",
+        "grassGrounded": true,
+        "grassBaseSink": 0.085
       }
     },
     "consoleErrors": [],
@@ -339,14 +356,14 @@
     "renderer": "webgl",
     "state": {
       "position": [
-        -18.7629454295604,
-        3.0205036060617596,
-        28.390817175200826
+        -19.215192671533693,
+        3.0090473598633674,
+        28.27071278768406
       ],
       "yaw": -0.8,
       "pitch": -0.015,
       "fov": 61,
-      "ground": 1.1705036060617593,
+      "ground": 1.159047359863367,
       "currentSpot": "village",
       "isLive": true,
       "renderer": "webgl",
@@ -454,9 +471,20 @@
         "reachedVillage": true
       },
       "joystick": {
-        "deltaX": 4.263907327540469,
-        "deltaZ": 1.1323761218913795,
+        "deltaX": 4.17429003704223,
+        "deltaZ": 1.1085762425614618,
         "moved": true
+      },
+      "performance": {
+        "fps": 239.6,
+        "pixelRatio": 1,
+        "drawCalls": 134,
+        "triangles": 91394,
+        "shadowAutoUpdate": false,
+        "terrainMaterial": "baked-vertex-color",
+        "grassMaterial": "alpha-cutout",
+        "grassGrounded": true,
+        "grassBaseSink": 0.085
       }
     },
     "consoleErrors": [],
@@ -464,7 +492,7 @@
   },
   "verification": {
     "passed": true,
-    "assertionCount": 59,
+    "assertionCount": 63,
     "failedCount": 0,
     "assertions": [
       {
@@ -648,7 +676,7 @@
         "passed": true
       },
       {
-        "name": "desktop.drag",
+        "name": "desktop.lookByMouseMove",
         "passed": true
       },
       {
@@ -688,7 +716,19 @@
         "passed": true
       },
       {
+        "name": "desktop.grassGrounded",
+        "passed": true
+      },
+      {
+        "name": "desktop.terrainBaked",
+        "passed": true
+      },
+      {
         "name": "desktop.panoramaDepth",
+        "passed": true
+      },
+      {
+        "name": "desktop.performanceBudget",
         "passed": true
       },
       {
@@ -701,6 +741,10 @@
       },
       {
         "name": "mobile.joystick",
+        "passed": true
+      },
+      {
+        "name": "mobile.performanceBudget",
         "passed": true
       }
     ]

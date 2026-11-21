@@ -140,13 +140,13 @@ async function capture(name, viewport, options = {}) {
     await page.waitForTimeout(180);
     const afterRun = await readState(page);
 
-    const beforeDrag = await readState(page);
+    await page.mouse.move(viewport.width * 0.56, viewport.height * 0.46);
+    await page.waitForTimeout(120);
+    const beforeLook = await readState(page);
     await page.mouse.move(viewport.width * 0.62, viewport.height * 0.46);
-    await page.mouse.down();
-    await page.mouse.move(viewport.width * 0.72, viewport.height * 0.5, { steps: 8 });
-    await page.mouse.up();
+    await page.mouse.move(viewport.width * 0.72, viewport.height * 0.5, { steps: 10 });
     await page.waitForTimeout(260);
-    const afterDrag = await readState(page);
+    const afterLook = await readState(page);
 
     const beforeWheel = await readState(page);
     await page.mouse.move(viewport.width * 0.64, viewport.height * 0.48);
@@ -171,6 +171,7 @@ async function capture(name, viewport, options = {}) {
     const bridgeSeam = await page.evaluate(() => window.__qianliDebug.getBridgeSeam());
     const placementAudit = await page.evaluate(() => window.__qianliDebug.getLandPlacementAudit());
     const sceneDetailAudit = await page.evaluate(() => window.__qianliDebug.getSceneDetailAudit());
+    const performanceAudit = await page.evaluate(() => window.__qianliDebug.getPerformanceAudit());
 
     await page.locator("#reference-trigger").click();
     await page.waitForTimeout(220);
@@ -209,10 +210,10 @@ async function capture(name, viewport, options = {}) {
         afterRun.position[2] - beforeRun.position[2],
       ) > 3.5,
     };
-    interactions.drag = {
-      deltaYaw: Math.abs(afterDrag.yaw - beforeDrag.yaw),
-      deltaPitch: Math.abs(afterDrag.pitch - beforeDrag.pitch),
-      moved: Math.hypot(afterDrag.yaw - beforeDrag.yaw, afterDrag.pitch - beforeDrag.pitch) > 0.01,
+    interactions.look = {
+      deltaYaw: Math.abs(afterLook.yaw - beforeLook.yaw),
+      deltaPitch: Math.abs(afterLook.pitch - beforeLook.pitch),
+      moved: Math.hypot(afterLook.yaw - beforeLook.yaw, afterLook.pitch - beforeLook.pitch) > 0.01,
     };
     interactions.wheel = {
       beforeFov: beforeWheel.fov,
@@ -244,6 +245,7 @@ async function capture(name, viewport, options = {}) {
         .map((placement) => [placement.x, placement.z, placement.clearance]),
     };
     interactions.sceneDetail = sceneDetailAudit;
+    interactions.performance = performanceAudit;
   }
 
   if (name === "mobile") {
@@ -297,6 +299,9 @@ async function capture(name, viewport, options = {}) {
         afterJoystick.position[2] - beforeJoystick.position[2],
       ) > 0.15,
     };
+    interactions.performance = await page.evaluate(
+      () => window.__qianliDebug.getPerformanceAudit(),
+    );
   }
 
   observations[name] = await page.evaluate(() => {
@@ -454,7 +459,7 @@ function verifyObservations() {
   recordAssertion("desktop.keyboard", desktop.keyboard?.moved === true);
   recordAssertion("desktop.strafe", desktop.strafe?.moved === true);
   recordAssertion("desktop.run", desktop.run?.accelerated === true, desktop.run);
-  recordAssertion("desktop.drag", desktop.drag?.moved === true, desktop.drag);
+  recordAssertion("desktop.lookByMouseMove", desktop.look?.moved === true, desktop.look);
   recordAssertion("desktop.wheel", desktop.wheel?.changed === true, desktop.wheel);
   recordAssertion(
     "desktop.travel",
@@ -529,12 +534,39 @@ function verifyObservations() {
     },
   );
   recordAssertion(
+    "desktop.grassGrounded",
+    sceneDetail?.grassGrounded === true &&
+      sceneDetail?.grassMaterial === "alpha-cutout" &&
+      sceneDetail?.grassVertexColors === false &&
+      sceneDetail?.grassBaseSink >= 0.05,
+    {
+      grounded: sceneDetail?.grassGrounded,
+      material: sceneDetail?.grassMaterial,
+      vertexColors: sceneDetail?.grassVertexColors,
+      baseSink: sceneDetail?.grassBaseSink,
+    },
+  );
+  recordAssertion(
+    "desktop.terrainBaked",
+    sceneDetail?.terrainMaterial === "baked-vertex-color",
+    sceneDetail?.terrainMaterial,
+  );
+  recordAssertion(
     "desktop.panoramaDepth",
     sceneDetail?.panoramaLayers === 2 && sceneDetail?.panoramaVeil === true,
     {
       layers: sceneDetail?.panoramaLayers,
       veil: sceneDetail?.panoramaVeil,
     },
+  );
+  const desktopPerformance = desktop.performance;
+  recordAssertion(
+    "desktop.performanceBudget",
+    desktopPerformance?.fps >= 28 &&
+      desktopPerformance?.pixelRatio <= 1.2 &&
+      desktopPerformance?.shadowAutoUpdate === false &&
+      desktopPerformance?.drawCalls <= 320,
+    desktopPerformance,
   );
 
   const mobile = observations.mobile.interactions;
@@ -551,6 +583,13 @@ function verifyObservations() {
     mobile.travel,
   );
   recordAssertion("mobile.joystick", mobile.joystick?.moved === true, mobile.joystick);
+  recordAssertion(
+    "mobile.performanceBudget",
+    mobile.performance?.fps >= 24 &&
+      mobile.performance?.pixelRatio <= 1 &&
+      mobile.performance?.shadowAutoUpdate === false,
+    mobile.performance,
+  );
 
   const failures = assertions.filter((assertion) => !assertion.passed);
   return {
